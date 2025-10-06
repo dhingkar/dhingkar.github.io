@@ -1,0 +1,162 @@
+<!-- =========================
+  FILE 1: index.html  (BOARD)
+  Put this in an index.html file. It links to question.html?id=<tile-id>
+  ========================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Board</title>
+  <style>
+    :root{ --bg:#5a4e6d; --tile1:#ffcf9f; --tile2:#f28a3a; --ink:#0b52ff; --text:#1b1b1b; --radius:14px; --gap:14px; }
+    html,body{height:100%;margin:0;background:radial-gradient(ellipse at top left,#6a5e80 0%, var(--bg) 45%),radial-gradient(ellipse at bottom right,#746a8a 0%, var(--bg) 50%);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--text)}
+    header{position:sticky;top:0;background:rgba(255,255,255,.75);backdrop-filter:saturate(140%) blur(10px);padding:10px 16px;border-bottom:1px solid #ddd;z-index:10}
+    header h1{margin:0;font-size:18px;font-weight:700}
+    .wrap{max-width:960px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+    .tile{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .12s ease,box-shadow .12s ease;background:linear-gradient(180deg,var(--tile1),var(--tile2))}
+    .tile:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+    .tile a{display:flex;align-items:center;justify-content:center;min-height:112px;padding:16px;text-align:center;font-weight:800;line-height:1.1;text-decoration:none;color:var(--ink);text-shadow:0 1px 0 rgba(255,255,255,.45)}
+    .tile.done{opacity:.55}
+    .tile.done a{color:#16326a}
+    .tile.done::after{content:"";position:absolute;left:-10%;right:-10%;top:50%;height:3px;background:#1a1a1a;transform:rotate(-15deg);box-shadow:0 0 0 2px rgba(255,255,255,.35) inset}
+    @media (max-width:830px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:540px){.grid{grid-template-columns:repeat(2,1fr)}.tile a{min-height:96px}}
+  </style>
+</head>
+<body>
+  <header><h1>Quiz Board</h1></header>
+  <main class="wrap">
+    <p>Click a tile to open its question. Returning to this page will show it crossed out. Progress is stored in <code>localStorage</code>.</p>
+    <div class="grid" id="tiles"></div>
+    <p style="margin-top:18px"><a href="#" id="reset">Reset crosses</a></p>
+  </main>
+  <script>
+    const ITEMS=[
+      {id:"pop-new",label:"Pop
+culture
+(new)"},{id:"sports-india",label:"Sports
+(India)"},{id:"food-spicy",label:"Food
+(Spicy)"},{id:"arch-int",label:"Architecture
+(Int.)"},{id:"rev-old",label:"Revolution
+(Old)"},
+      {id:"arch-new",label:"Architecture
+(New)"},{id:"food-sour",label:"Food
+(Sour)"},{id:"rev-int",label:"Revolution
+(Int.)"},{id:"pop-india",label:"Pop
+culture
+(India)"},{id:"sport-new",label:"Sport
+(New)"},
+      {id:"food-bitter",label:"Food
+(Bitter)"},{id:"rev-new",label:"Revolution
+(New)"},{id:"pop-old",label:"Pop
+culture
+(Old)"},{id:"sport-misc",label:"Sport
+(Misc.)"},{id:"arch-india",label:"Architecture
+(India)"},
+      {id:"rev-misc",label:"Revolution
+(Misc.)"},{id:"pop-misc",label:"Pop
+culture
+(Misc.)"},{id:"arch-old",label:"Architecture
+(Old)"},{id:"food-sweet",label:"Food
+(Sweet)"},{id:"sport-int",label:"Sport
+(Int.)"},
+      {id:"sport-old",label:"Sport
+(Old)"},{id:"arch-misc",label:"Architecture
+(Misc.)"},{id:"pop-int",label:"Pop
+culture
+(Int.)"},{id:"rev-india",label:"Revolution
+(India)"},{id:"food-misc",label:"Food
+(Misc.)"}
+    ];
+    const STORAGE_KEY='quiz-board-completed-v2';
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    const grid=document.getElementById('tiles');
+    ITEMS.forEach(item=>{
+      const t=document.createElement('div');t.className='tile';t.dataset.id=item.id; if(state[item.id]) t.classList.add('done');
+      const a=document.createElement('a');a.href=`question.html?id=${encodeURIComponent(item.id)}`;a.innerHTML=item.label.split('
+').map(s=>`<span>${s}</span>`).join('<br>');
+      t.appendChild(a);grid.appendChild(t);
+    });
+    document.getElementById('reset').onclick=(e)=>{e.preventDefault();localStorage.removeItem(STORAGE_KEY);location.reload()};
+  </script>
+</body>
+</html>
+
+
+<!-- =========================
+  FILE 2: question.html  (SINGLE TEMPLATE FOR ALL QUESTIONS)
+  Put this in a separate question.html file in the same folder as index.html
+  It reads ?id=<tile-id>, shows that question, and marks it completed.
+  ========================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Question</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f6fb;color:#1b1b1b}
+    .card{max-width:860px;margin:28px auto;background:#fff;border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.14);padding:22px}
+    h1{margin:0 0 8px 0}
+    .meta{color:#666;margin:0 0 16px 0}
+    .controls{margin-top:18px}
+    a.button,button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">Question</h1>
+    <p class="meta" id="subtitle"></p>
+    <div id="qtext">Loading…</div>
+    <!-- Example: you can add an input form to validate answers -->
+    <!-- <div class="controls"><input id="answer" placeholder="Your answer"/> <button id="submit">Check</button></div> -->
+    <div class="controls"><a class="button" href="index.html">⬅ Back to board</a></div>
+  </div>
+  <script>
+    const ITEMS={
+      "pop-new":{label:"Pop culture (new)", q:"Your Pop culture (new) question goes here."},
+      "sports-india":{label:"Sports (India)", q:"Your Sports (India) question goes here."},
+      "food-spicy":{label:"Food (Spicy)", q:"Your Food (Spicy) question goes here."},
+      "arch-int":{label:"Architecture (Int.)", q:"Your Architecture (International) question goes here."},
+      "rev-old":{label:"Revolution (Old)", q:"Your Revolution (Old) question goes here."},
+      "arch-new":{label:"Architecture (New)", q:"Your Architecture (New) question goes here."},
+      "food-sour":{label:"Food (Sour)", q:"Your Food (Sour) question goes here."},
+      "rev-int":{label:"Revolution (Int.)", q:"Your Revolution (International) question goes here."},
+      "pop-india":{label:"Pop culture (India)", q:"Your Pop culture (India) question goes here."},
+      "sport-new":{label:"Sport (New)", q:"Your Sport (New) question goes here."},
+      "food-bitter":{label:"Food (Bitter)", q:"Your Food (Bitter) question goes here."},
+      "rev-new":{label:"Revolution (New)", q:"Your Revolution (New) question goes here."},
+      "pop-old":{label:"Pop culture (Old)", q:"Your Pop culture (Old) question goes here."},
+      "sport-misc":{label:"Sport (Misc.)", q:"Your Sport (Misc.) question goes here."},
+      "arch-india":{label:"Architecture (India)", q:"Your Architecture (India) question goes here."},
+      "rev-misc":{label:"Revolution (Misc.)", q:"Your Revolution (Misc.) question goes here."},
+      "pop-misc":{label:"Pop culture (Misc.)", q:"Your Pop culture (Misc.) question goes here."},
+      "arch-old":{label:"Architecture (Old)", q:"Your Architecture (Old) question goes here."},
+      "food-sweet":{label:"Food (Sweet)", q:"Your Food (Sweet) question goes here."},
+      "sport-int":{label:"Sport (Int.)", q:"Your Sport (International) question goes here."},
+      "sport-old":{label:"Sport (Old)", q:"Your Sport (Old) question goes here."},
+      "arch-misc":{label:"Architecture (Misc.)", q:"Your Architecture (Misc.) question goes here."},
+      "pop-int":{label:"Pop culture (Int.)", q:"Your Pop culture (International) question goes here."},
+      "rev-india":{label:"Revolution (India)", q:"Your Revolution (India) question goes here."},
+      "food-misc":{label:"Food (Misc.)", q:"Your Food (Misc.) question goes here."}
+    };
+
+    const params=new URLSearchParams(location.search);
+    const id=params.get('id');
+    const item=ITEMS[id];
+    if(!item){ document.getElementById('qtext').textContent='Unknown question id.'; }
+    else{
+      document.title=item.label;
+      document.getElementById('title').textContent=item.label;
+      document.getElementById('subtitle').textContent=`ID: ${id}`;
+      document.getElementById('qtext').textContent=item.q;
+      // Mark completed as soon as this page is opened
+      const STORAGE_KEY='quiz-board-completed-v2';
+      const state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+      state[id]=true; localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+    }
+  </script>
+</body>
+</html>
